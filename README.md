@@ -98,7 +98,7 @@ POST /chat
 ## Author
 
 **Sachin Mishra**
-B.Tech CSE (AI/ML), AKTU Lucknow
+
 
 ## License
 
