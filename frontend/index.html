@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CHATBOAT</title>
+    <style>
+  body { font-family: system-ui, sans-serif; background: #0f1115; color: #eee; margin: 0; display: flex; justify-content: center; }
+  .chat-wrap { width: 100%; max-width: 640px; height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 16px; font-size: 18px; font-weight: 600; border-bottom: 1px solid #2a2d34; }
+  #messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { padding: 10px 14px; border-radius: 12px; max-width: 75%; line-height: 1.4; white-space: pre-wrap; }
+  .user { align-self: flex-end; background: #4f6df5; color: white; }
+  .bot { align-self: flex-start; background: #1e2128; }
+  form { display: flex; padding: 12px; gap: 8px; border-top: 1px solid #2a2d34; }
+  input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #2a2d34; background: #1a1c22; color: #eee; }
+  button { padding: 12px 20px; border: none; border-radius: 8px; background: #4f6df5; color: white; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="chat-wrap">
+  <header>AI Talk</header>
+  <div id="messages"></div>
+  <form id="chat-form">
+    <input id="input" placeholder="Type a message..." autocomplete="off" />
+    <button type="submit" id="send-btn">Send</button>
+  </form>
+</div>
+
+<script>
+const API_URL = "http://localhost:8000/chat";
+const sessionId = crypto.randomUUID();
+const messagesEl = document.getElementById("messages");
+const form = document.getElementById("chat-form");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send-btn");
+
+function addMessage(text, sender) {
+  const div = document.createElement("div");
+  div.className = "msg " + sender;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  sendBtn.disabled = true;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, session_id: sessionId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Something went wrong");
+    addMessage(data.reply, "bot");
+  } catch (err) {
+    addMessage("Error: " + err.message, "bot");
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
